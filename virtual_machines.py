@@ -7,6 +7,7 @@ class vm():
     def __init__(self, rate, port):
         self.log = []
         self.rate = rate
+        self.port = port
 
 
     def start(self):
