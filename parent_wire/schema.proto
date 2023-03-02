@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package clock_model;
+
+// A note that the virtual machine sends to the parent process to
+// ask for a name and learn about other virtual machines in the system
+message ImAliveRequest { }
+
+// The identity of a machine in our scale model
+// Contains their name and the port they're listening on
+message Identity {
+  string name = 1;
+  uint32 port = 2;
+}
+
+// The data sent back to a machine in our scale model to coordinate
+// their name and what port they should be listening on.
+message BirthResponse {
+  bool success = 1;
+  string error_message = 2;
+  optional Identity identity = 3;
+  repeated Identity peers = 4;
+}
+
+// Empty response to return on receipt of death
+message DeathResponse { }
+
+// The service running in the background that organizes our machines
+// so that they can easily communicate without having to hardcode things
+service Parent {
+  rpc ImAlive(ImAliveRequest) returns (BirthResponse);
+  rpc ImDying(Identity) returns (DeathResponse);
+}
