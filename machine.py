@@ -1,59 +1,56 @@
-import asyncio
-import time
-import numpy as np
-import grpc
+import sys
 import consts
-from parent_wire import schema_pb2 as schema, schema_pb2_grpc as services, 
-from communication import PeerConnection
-from typing import Optional
+import pdb
+from connection_manager import ConnectionManager
+from utils import print_error
 
-class Machine():
+class Machine:
     """
-    A class to simulate a single machine object in our scale model
+    A machine that will be used in our scale model. It will
+    be instantiated with a name, which must be in the mapping
+    given in the constants file. It will participate in communication
+    and clock events as described in the specification.
     """
 
-    def __init__(self, rate):
-        self.log = []
-        self.rate: int = rate
-        self.peer_connections: list[PeerConnection] = []
-        self.identity: Optional[schema.Identity] = None
-
-    def identify(self):
+    def __init__(self, name: str):
         """
-        Establishes a stub with the parent process to get an identity,
-        peers, and a stub to communicate with the parent
-        returns: (identity, peers, stub)
+        Simply loads the identity with the given name. Throws an
+        error if the name is not valid.
+        NOTE: Does not do any work to establish connections.
         """
-        with grpc.insecure_channel(consts.PARENT_IP + f":{consts.PARENT_PORT}") as channel:
-            stub = services.ParentStub(channel=channel)
-            response = stub.ImAlive(schema.ImAliveRequest())
-            return (response.identity, response.peers)
+        if name not in consts.IDENTITY_MAP:
+            raise ValueError("Invalid machine name")
+        self.identity = consts.IDENTITY_MAP[name]
+        self.conman = ConnectionManager(self.identity)
     
-    async def establish_connections(self):
-        """
-        This function handles the logic of connecting to our peers.
-        It will first try to connect to all peers that already exist,
-        then will start listening until we have reached the maximum
-        """
-        # First introduce ourselves to peers that already exist
-        for peer in self.peers:
-            connection = PeerConnection(peer)
-            await connection.try_establish()
-            self.peer_connections.append(connection)
-        # Then listen for new peers
-        while len(self.peer_connections) < consts.MAX_CLIENTS:
-            def on_connect(reader, writer):
-                self.peer_connections.append(PeerConnection(peer, reader, writer))
-            await PeerConnection.listen(50052, on_connect)
-
     def start(self):
+        """
+        Starts the machine
+        """
+        self.conman.initialize()
+    
+    def kill(self):
+        """
+        Kills the machine
+        """
+        self.conman.kill()
 
-        (self.identity, self.peers) = self.identify()
 
-        with grpc.insecure_channel(consts.PARENT_IP + f":{consts.PARENT_PORT}") as channel:
-            self.stub = services.ParentStub(channel=channel)
-            self.stub.ImDying(self.identity)
+def create_machine(name: str):
+    """
+    Creates and runs a machine with the given name
+    """
+    try:
+        machine = Machine(name)
+        machine.start()
+        machine.kill()
+    except Exception as e:
+        print_error("Unknown error")
+        print(e.args)
+        exit(1)
 
 if __name__ == "__main__":
-    machine = Machine(1)
-    machine.start()
+    if len(sys.argv) < 2:
+        print_error("Usage: python3 machine.py <machine_name>")
+        exit(1)
+    create_machine(sys.argv[1])    
