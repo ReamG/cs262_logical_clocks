@@ -5,8 +5,10 @@ import time
 from pudb import forked
 from typing import Mapping
 from schema.identity import Identity
+from schema.message import Message
 from threading import Thread
 from utils import print_info, print_error
+from queue import Queue
 
 class ConnectionManager:
     """
@@ -19,6 +21,8 @@ class ConnectionManager:
         self.identity = identity
         self.socket_map: Mapping[str, any] = {}
         self.alive = True
+        self.msg_lock = threading.Lock()
+        self.msg_queue: "Queue[Message]" = Queue()
     
     def kill(self):
         """
@@ -26,7 +30,12 @@ class ConnectionManager:
         """
         self.alive = False
         for sock in self.socket_map.values():
-            sock.shutdown(1)
+            # Helps prevent the weird "address is already in use" error
+            try:
+                sock.shutdown(1)
+            except:
+                # Makes sure that we at least close every socket
+                pass
             sock.close()
     
     def consume(self, conn, name):
@@ -42,8 +51,11 @@ class ConnectionManager:
             while True:
                 # Get the message
                 msg = conn.recv(1024).decode()
-                if msg and len(msg) > 0:
-                    print_info(f"Received message from {name}: {msg}")
+                if not msg or len(msg) <= 0:
+                    continue
+                with self.msg_lock:
+                    msg_obj = Message.from_string(msg)
+                    self.msg_queue.put(msg_obj)
         except socket.timeout:
             if not self.alive:                
                 conn.close()
@@ -63,12 +75,14 @@ class ConnectionManager:
             )
             consumer_thread.start()
     
-    def listen(self):
+    def listen(self, sock=None):
         """
         Listens for incoming connections
         """
         # Setup the socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if not sock:
+            # NOTE: The second parameter is only for unit testing purposes
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self.identity.host_ip, self.identity.host_port))
         sock.listen()
@@ -82,10 +96,6 @@ class ConnectionManager:
             # Add the connection to the map
             self.socket_map[name] = conn
             listens_completed += 1
-        try:
-            sock.shutdown(1)
-        except:
-            pass
         sock.close()
 
     def connect(self, name: str):
