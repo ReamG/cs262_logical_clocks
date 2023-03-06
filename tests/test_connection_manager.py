@@ -256,5 +256,25 @@ def test_initialize():
     assert has_called_listen == True
     assert has_called_handle_connections == True
 
+def test_send():
+    """
+    Test that the send function calls the send function on the
+    correct socket, and the write message is encoded and sent
+    over the socket
+    """
+    manager = ConnectionManager(BLANK_IDENTITY)
+    A_dum_sock = socket.socket(0, 0)
+    manager.socket_map = {
+        "A": A_dum_sock
+    }
+
+    manager.send("not exist", 100)
+
+    assert A_dum_sock.sent == []
+
+    manager.send("A", 100)
+
+    assert A_dum_sock.sent == [str(Message("T",100)).encode()]
+
 if __name__ == "__main__":
     print("All tests passed!")
