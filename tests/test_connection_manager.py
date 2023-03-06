@@ -56,9 +56,9 @@ def test_consume():
     manager = ConnectionManager(BLANK_IDENTITY)
     A_dum_sock = socket.socket(0, 0)
 
-    A_msg = Message(author="A", message="a message")
-    B_msg = Message(author="B", message="b message")
-    C_msg = Message(author="C", message="c message")
+    A_msg = Message(author="A", time=1)
+    B_msg = Message(author="B", time=2)
+    C_msg = Message(author="C", time=3)
 
     A_dum_sock.add_fake_send(A_msg)
     A_dum_sock.add_fake_send(B_msg)
@@ -102,8 +102,8 @@ def test_handle_consumers():
     A_dum_sock = socket.socket(0, 0)
     B_dum_sock = socket.socket(0, 0)
 
-    A_msg = Message(author="A", message="a message")
-    B_msg = Message(author="B", message="b message")
+    A_msg = Message(author="A", time=1)
+    B_msg = Message(author="B", time=2)
 
     A_dum_sock.add_fake_send(A_msg)
 

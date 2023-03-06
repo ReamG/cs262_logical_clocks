@@ -1,3 +1,4 @@
+import time
 from typing import Mapping
 from schema.identity import Identity
 
@@ -32,3 +33,13 @@ IDENTITY_MAP: Mapping[str, Identity] = {
     "B": IDENTITY_B,
     "C": IDENTITY_C,
 }
+
+# Helper function to get systemtime in milliseconds
+def get_time() -> int:
+    return int(round(time.time() * 1000))
+
+# Helper function to get a list of other machines
+def get_other_machines(name: str) -> list[str]:
+    return [key for key in IDENTITY_MAP.keys() if key != name]
+
+EXPERIMENT_DURATION = 10000 # In milliseconds

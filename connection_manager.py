@@ -45,7 +45,6 @@ class ConnectionManager:
         conn: connection object
         name: name of the machine that connected
         """
-        print(f"Listening for messages from {name} on {self.identity.name}...")
         try:
             conn.settimeout(1)
             while True:
@@ -141,3 +140,10 @@ class ConnectionManager:
         connect_thread.join()
 
         self.handle_consumers()
+    
+    def send(self, to: str, clock: int):
+        """
+        Sends a message to the machine with the given name
+        """
+        msg = Message(self.identity.name, clock)
+        self.socket_map[to].send(str(msg).encode())
