@@ -48,17 +48,18 @@ class ConnectionManager:
         try:
             conn.settimeout(1)
             while True:
-                # Get the message
-                msg = conn.recv(1024).decode()
-                if not msg or len(msg) <= 0:
-                    continue
-                with self.msg_lock:
-                    msg_obj = Message.from_string(msg)
-                    self.msg_queue.put(msg_obj)
-        except socket.timeout:
-            if not self.alive:                
-                conn.close()
-                return
+                try:
+                    # Get the message
+                    msg = conn.recv(1024).decode()
+                    if not msg or len(msg) <= 0:
+                        continue
+                    with self.msg_lock:
+                        msg_obj = Message.from_string(msg)
+                        self.msg_queue.put(msg_obj)
+                except socket.timeout:
+                    if not self.alive:               
+                        conn.close()
+                        return
         except:
             conn.close()
     
