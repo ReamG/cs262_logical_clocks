@@ -5,12 +5,12 @@ from multiprocessing import Process
 from machine import create_machine
 
 def run_model():
-    run = 16
+    run = 31
     start_time = consts.get_time()
 
-    pA = Process(target=create_machine, args=("A", run, start_time, 6))
-    pB = Process(target=create_machine, args=("B", run, start_time, 6))
-    pC = Process(target=create_machine, args=("C", run, start_time, 6))
+    pA = Process(target=create_machine, args=("A", run, start_time))
+    pB = Process(target=create_machine, args=("B", run, start_time))
+    pC = Process(target=create_machine, args=("C", run, start_time))
 
     pA.start()
     pB.start()
