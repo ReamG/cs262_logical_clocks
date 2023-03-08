@@ -42,4 +42,4 @@ def get_time() -> int:
 def get_other_machines(name: str) -> list[str]:
     return [key for key in IDENTITY_MAP.keys() if key != name]
 
-EXPERIMENT_DURATION = 10000 # In milliseconds
+EXPERIMENT_DURATION = 66000 # In milliseconds

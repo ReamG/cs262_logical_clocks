@@ -2,6 +2,12 @@
 
 This document outlines the structure of our solution and important design decisions.
 
+## Table of Contents
+
+1. [Confinguring Machines](#configuring-machines)
+2. [Managing Connections](#managing-connections)
+3. [Handling the Experiments](#handling-the-experiments)
+
 ## Configuring Machines
 
 ### Schema
@@ -23,6 +29,10 @@ In `consts.py`, we first declare the identity of the three machines used in the 
 `EXPERIMENT_DURATION` defines how long (in milliseconds) the experiment should last. We set this value to `70,000` for our experiments, to follow the specs requirement that it be at least a minute (since our machines may need a couple seconds to connect).
 
 The remaining functions in `consts.py` are just quality-of-life helper functions. `get_time` just gets the epoch time in milliseconds (from the system) and `get_other_machines` is used to get all the machines in the system that are different from the machine making the call.
+
+### Utils
+
+The `utils.py` function just contains some printing utilities that print things in different colors.
 
 ## Managing Connections
 
@@ -59,3 +69,17 @@ Once we have connections, we spin up the consumers in the `handle_consumers` fun
 As mentioned briefly above, each machine has two threads. One of the threads simply runs the `consume` function on the attached `ConnectionManager` to ensure that messages from other machines are always immediately delivered to the queue.
 
 The other thread is the thread that runs the actual experiment. When this thread needs to send messages to other machines, it simply takes advantage of the helper `send` funciton in the `ConnectionManager` which does the work of turning the message into a string, encoding it, and sending it over the wire.
+
+## Handling the Experiments
+
+The experiments are relatively straightforward. Each machine on initialization picks a random number between 1-6 (as the spec says) as it's internal speed. The central `loop` function runs one frame of the experiment (which involves either receiving a message, sending some set of message(s) or doing an internal event), times it, and then sleeps to ensure that each frame runs exactly every 1/tick_speed seconds.
+
+To parse the log files, you can look at the comments surrounding all the write calls in `machine.py` to figure out what the various values mean. This dirty work is done for you in our analysis scripts.
+
+**NOTE**: To actually _run_ our experiment, you'll want to run:
+
+```
+python3 runner.py
+```
+
+This simply spawns three processes for the three machiens and then waits for them to finish.

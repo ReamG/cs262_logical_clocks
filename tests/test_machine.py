@@ -49,6 +49,15 @@ def test_init():
     assert machA.clock == 0
     assert machA.others == ["B", "C"]
 
+    # Test that you can hardcode the ticks per second
+    machB = Machine("B", 1, 0, 3)
+    assert machB.ticks_per_second == 3
+
+    # Test that if you don't hardcode the ticks per second, it's random
+    prime_randint(1)
+    machC = Machine("C", 1, 0)
+    assert machC.ticks_per_second == 1
+
 def test_get_system_time():
     """
     Tests that the get_system_time function works

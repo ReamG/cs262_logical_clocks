@@ -14,10 +14,12 @@ class Machine:
     and clock events as described in the specification.
     """
 
-    def __init__(self, name: str, run: int, start_time: int):
+    def __init__(self, name: str, run: int, start_time: int, hard_ticks: int=None):
         """
         Simply loads the identity with the given name. Throws an
-        error if the name is not valid.
+        error if the name is not valid. Can optionally pass a 
+        hard_ticks value to set the ticks per second to a fixed value,
+        instead of letting it be random. Useful for analysis.
         NOTE: Does not do any work to establish connections.
         NOTE: Run is the run number, used to distinguish between
         different runs of the same machine (mostly for file naming purposes)
@@ -28,7 +30,7 @@ class Machine:
         self.run = run
         self.start_time = start_time
         self.conman = ConnectionManager(self.identity)
-        self.ticks_per_second = random.randint(1, 6)
+        self.ticks_per_second = hard_ticks if hard_ticks else random.randint(1, 6)
         self.clock = 0
         # Helper variable to keep track of list of other machine names
         self.others = consts.get_other_machines(name)
@@ -42,6 +44,8 @@ class Machine:
     def start(self):
         """
         Starts the machine
+        What does it write?
+        INIT, MACHINE_NAME, TICKS_PER_SECOND
         """
         self.conman.initialize()
         self.fout = open(f"output/{self.identity.name}{self.run}.out", "w")
@@ -54,7 +58,7 @@ class Machine:
         queue is empty, does nothing. Otherwise, it takes the message from
         the queue, updates the logical clock, and write to the output file.
         What does it write?
-        RECEIVED, SENDER, MSG_Q_LENGTH, GLOBAL_TIME, LOGICAL_TIME
+        RECEIVED, SENDER, MSG_Q_LENGTH, SYSTEM_TIME, LOGICAL_TIME
         NOTE: It's expected that this function is only called when the queue
         is non-empty. The check's here are just to cover bases/for safety.
         """
@@ -136,14 +140,14 @@ class Machine:
         self.fout.close()
 
 
-def create_machine(name: str, run: int, start_time: int):
+def create_machine(name: str, run: int, start_time: int, hard_ticks: int=None):
     """
     Creates and runs a machine with the given name
     NOTE: start_time is milliseconds since epoch from
     the `runner.py` script to coordinate system time across processes
     """
     try:
-        machine = Machine(name, run, start_time)
+        machine = Machine(name, run, start_time, hard_ticks)
         machine.start()
         machine.kill()
     except Exception as e:
@@ -153,6 +157,6 @@ def create_machine(name: str, run: int, start_time: int):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print_error("Usage: python3 machine.py <machine_name>")
+        print_error("Usage: python3 machine.py <machine_name> <run_number> <start_time> <hard_ticks>")
         exit(1)
-    create_machine(sys.argv[1])    
+    create_machine(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]) if len(sys.argv) > 4 else None)

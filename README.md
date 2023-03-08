@@ -15,3 +15,11 @@ How we implement the spec and important design decisions.
 ## [Testing](docs/testing.md)
 
 How we wrote unit tests.
+
+## [Analysis](docs/analysis.md)
+
+How we thought about analysis and how to run our analysis scripts.
+
+## [Engineering Notebook](https://www.notion.so/Project-Two-6502c219418a411e8e398b93f1132cf2?pvs=4)
+
+Our engineering notebook. **NOTE**: This notion page houses all of the analysis of the data in our experiment logs.
