@@ -109,7 +109,7 @@ class Machine:
             return
         # Msg queue empty, update the clock and take an action
         self.clock += 1
-        action = random.randint(1, 10)
+        action = random.randint(1, 50)
         if action == 1:
             self.single_send(self.others[0])
         elif action == 2:
