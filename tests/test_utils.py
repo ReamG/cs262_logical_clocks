@@ -13,9 +13,13 @@ class MockedConnectionManager:
         self.has_initialized = False
         self.msg_queue = Queue()
         self.sent: list[(str, int)] = []
+        self.has_killed = False
 
     def initialize(self):
         self.has_initialized = True
 
     def send(self, to: str, clock: int):
         self.sent.append((to, clock))
+
+    def kill(self):
+        self.has_killed = True

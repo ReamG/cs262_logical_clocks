@@ -7,6 +7,7 @@ import socket
 import threading
 import time
 import consts
+import pytest
 from threading import Thread
 
 BLANK_IDENTITY = Identity(
@@ -171,6 +172,15 @@ def test_connect():
     assert sock2 is not None
     assert sock2.connected_to == (consts.IDENTITY_A.host_ip, consts.IDENTITY_A.host_port)
     assert sock2.sent == ["C".encode()]
+
+def test_connect_bad_name():
+    """
+    Tests that attempting to connect to a peer that's not in the
+    identity map will raise an error
+    """
+    manager = ConnectionManager(consts.IDENTITY_B)
+    with pytest.raises(Exception):
+        manager.connect("D")
 
 def test_handle_connections():
     """

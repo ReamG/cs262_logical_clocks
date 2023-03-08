@@ -2,12 +2,11 @@ import socket
 import threading
 import consts
 import time
-from pudb import forked
 from typing import Mapping
 from schema.identity import Identity
 from schema.message import Message
 from threading import Thread
-from utils import print_info, print_error
+from utils import print_error
 from queue import Queue
 
 class ConnectionManager:
@@ -46,6 +45,10 @@ class ConnectionManager:
         name: name of the machine that connected
         """
         try:
+            # NOTE: The use of timeout here is to ensure that we can
+            # gracefully kill machines. Essentially the machine will check
+            # in once a second to make sure it hasn't been killed, instead
+            # of listening forever.
             conn.settimeout(1)
             while True:
                 try:
@@ -77,7 +80,8 @@ class ConnectionManager:
     
     def listen(self, sock=None):
         """
-        Listens for incoming connections
+        Listens for incoming connections. Adds a connection to the socket
+        map once connected, and repeats num_listens times.
         """
         # Setup the socket
         if not sock:
@@ -101,8 +105,13 @@ class ConnectionManager:
     def connect(self, name: str):
         """
         Connects to the machine with the given name
+        NOTE: Can/is expected to sometimes throw errors
         """
         # Get the identity of the machine to connect to
+        if name not in consts.IDENTITY_MAP:
+            print_error(f"Machine {name} is not in the identity map")
+            print_error("Please recheck your configuration and try again")
+            raise(Exception("Invalid machine name"))
         identity = consts.IDENTITY_MAP[name]
         # Setup the socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -146,5 +155,8 @@ class ConnectionManager:
         """
         Sends a message to the machine with the given name
         """
+        if to not in self.socket_map:
+            print_error(f"Machine {to} is not connected")
+            return
         msg = Message(self.identity.name, clock)
         self.socket_map[to].send(str(msg).encode())

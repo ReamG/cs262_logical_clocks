@@ -3,3 +3,4 @@ __pycache__
 *.pyc
 parent_wire/__pycache__
 server.pid
+tests/.pytest_cache

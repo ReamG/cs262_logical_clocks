@@ -332,8 +332,61 @@ def test_frame():
     assert num_calls_to_internal_event == 7
     assert machA.clock == 13
 
-# def test_loop(): TODO
+def test_loop():
+    """
+    Tests that the loop function runs until time - start_time is greater than
+    the experiment duration. Tests that on each iteration the frame function
+    is called.
+    """
+    # Mock overload the get_time function
+    old_get_time = consts.get_time
+    old_duration = consts.EXPERIMENT_DURATION
+    time_to_return = 0
+    def dummy_get_time():
+        nonlocal time_to_return
+        return time_to_return
+    consts.get_time = dummy_get_time
+    consts.EXPERIMENT_DURATION = 60000
 
-# def test_kill(): TODO
+    # Set up the machine
+    machA = Machine("A", 1, 0)
+    machA.conman = MockedConnectionManager()
+    # Mock the frame function to just increase time
+    numFrames = 0
+    def dummy_increment_time():
+        nonlocal time_to_return
+        nonlocal numFrames
+        time_to_return += 1000
+        numFrames += 1
+    machA.frame = dummy_increment_time
+    machA.loop()
+    assert numFrames == 60
+    consts.get_time = old_get_time
+    consts.EXPERIMENT_DURATION = old_duration
 
-# def test_create_machine(): TODO
+def test_kill():
+    """
+    Tests that the kill function kills the machine. This means
+    it needs to pass the kill call to the connectionmanager and
+    close the log file.
+    """
+    # Starts the dummy machine 
+    machA = Machine("A", 1, 0)
+    machA.conman = MockedConnectionManager()
+    machA.loop = lambda: None
+    machA.start()
+    
+    # For overriding the log file close function
+    has_closed_log = False
+    def dummy_close():
+        nonlocal has_closed_log
+        has_closed_log = True
+    machA.fout.close = dummy_close
+
+    assert machA.conman.has_killed == False
+    assert has_closed_log == False
+
+    machA.kill()
+
+    assert machA.conman.has_killed
+    assert has_closed_log
