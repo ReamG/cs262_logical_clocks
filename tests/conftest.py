@@ -6,22 +6,23 @@ from schema.identity import Identity
 from schema.message import Message
 from typing import Union
 
-# A reference to the mocked module 
-module = type(sys)("socket")
+# References to the mocked module s
+sock_module = type(sys)("socket")
+rand_module = type(sys)("random")
 
 # Dummy constants
 class timeout(Exception):
     pass
-module.timeout = timeout
+sock_module.timeout = timeout
 
 SOL_SOCKET = 0
 SO_REUSEADDR = 0
 AF_INET = 0
 SOCK_STREAM = 0
-module.SOL_SOCKET = SOL_SOCKET
-module.SO_REUSEADDR = SO_REUSEADDR
-module.AF_INET = AF_INET
-module.SOCK_STREAM = SOCK_STREAM
+sock_module.SOL_SOCKET = SOL_SOCKET
+sock_module.SO_REUSEADDR = SO_REUSEADDR
+sock_module.AF_INET = AF_INET
+sock_module.SOCK_STREAM = SOCK_STREAM
 
 class socket:
     """
@@ -93,6 +94,19 @@ class socket:
     def send(self, bs: bytes):
         self.sent.append(bs)
 
-module.socket = socket
 
-sys.modules["socket"] = module
+next_rand_int = 2
+
+def prime_randint(next_num):
+    global next_rand_int
+    next_rand_int = next_num
+
+def randint(_, __):
+    global next_rand_int
+    return next_rand_int
+
+sock_module.socket = socket
+rand_module.randint = randint
+
+sys.modules["socket"] = sock_module
+sys.modules["random"] = rand_module

@@ -7,6 +7,7 @@ import socket
 import threading
 import time
 import consts
+import pytest
 from threading import Thread
 
 BLANK_IDENTITY = Identity(
@@ -172,6 +173,15 @@ def test_connect():
     assert sock2.connected_to == (consts.IDENTITY_A.host_ip, consts.IDENTITY_A.host_port)
     assert sock2.sent == ["C".encode()]
 
+def test_connect_bad_name():
+    """
+    Tests that attempting to connect to a peer that's not in the
+    identity map will raise an error
+    """
+    manager = ConnectionManager(consts.IDENTITY_B)
+    with pytest.raises(Exception):
+        manager.connect("D")
+
 def test_handle_connections():
     """
     Test that the handle connections function calls
@@ -255,6 +265,26 @@ def test_initialize():
 
     assert has_called_listen == True
     assert has_called_handle_connections == True
+
+def test_send():
+    """
+    Test that the send function calls the send function on the
+    correct socket, and the write message is encoded and sent
+    over the socket
+    """
+    manager = ConnectionManager(BLANK_IDENTITY)
+    A_dum_sock = socket.socket(0, 0)
+    manager.socket_map = {
+        "A": A_dum_sock
+    }
+
+    manager.send("not exist", 100)
+
+    assert A_dum_sock.sent == []
+
+    manager.send("A", 100)
+
+    assert A_dum_sock.sent == [str(Message("T",100)).encode()]
 
 if __name__ == "__main__":
     print("All tests passed!")

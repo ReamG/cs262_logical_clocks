@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 class Identity:
     """
     A class that represents the identity of a machine. Most crucially
@@ -15,8 +13,13 @@ class Identity:
             num_listens: int,
             connections: list[str]
         ):
+        # The name of the machine (in our experiments "A" | "B" | "C")
         self.name = name
+        # The ip address the machine should listen on for new connections
         self.host_ip = host_ip
+        # The port the machine should listen on for new connections
         self.host_port = host_port
+        # The number of connections the machine should listen for
         self.num_listens = num_listens
+        # The names of the machines that this machine should connect to
         self.connections = connections

@@ -1,6 +1,5 @@
 import sys
 import consts
-import pdb
 import time
 import random
 import math
@@ -72,6 +71,8 @@ class Machine:
         What does it write?
         SINGLE_SEND, TO, SYSTEM_TIME, LOGICAL_TIME
         """
+        if to not in self.others:
+            raise ValueError("Invalid machine name")
         self.conman.send(to, self.clock)
         self.fout.write(f"SINGLE_SEND,{self.get_system_time()},{self.clock}\n")
     
@@ -124,7 +125,8 @@ class Machine:
             frame_start = consts.get_time()
             self.frame()
             sleep_amt = milliseconds_per_tick - (consts.get_time() - frame_start)
-            time.sleep(sleep_amt / 1000)
+            if sleep_amt > 0:
+                time.sleep(sleep_amt / 1000)
     
     def kill(self):
         """
